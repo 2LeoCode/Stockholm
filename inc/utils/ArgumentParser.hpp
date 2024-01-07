@@ -18,20 +18,18 @@ namespace cli {
     using optional = std::optional<T>;
     template <class T>
     using vec = std::vector<T>;
+    template <class ...T>
+    using tuple = std::tuple<T...>;
     using str = std::string;
     using str_view = std::string_view;
 
     public:
       struct Option {
-        const str & name;
         const char letter;
         const str_view & description;
 
         constexpr bool operator==(const Option & other) const {
-          return (
-            name == other.name ||
-            letter == other.letter
-          );
+          return letter == other.letter;
         }
       };
 
@@ -43,7 +41,7 @@ namespace cli {
       ) : m_argc(argc), m_argv(argv), m_help(help) {};
 
       Self & addOption(
-        const str & name,
+        const str_view & name,
         char letter,
         const str_view & description
       );

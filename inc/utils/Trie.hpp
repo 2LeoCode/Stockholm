@@ -47,21 +47,22 @@ namespace data {
           if (!_children[i])
             throw invalid_argument("KeyNotFound");
           delete _children[i];
+          _children[i] = nullptr;
         }
 
-        constexpr bool hasChildren(void) const {
+        inline bool hasChildren(void) const {
           return _childCount;
         }
 
-        constexpr Self * parent(void) const {
+        inline Self * parent(void) const {
           return _parent;
         }
 
-        constexpr size_t childCount(void) const {
+        inline size_t childCount(void) const {
           return _childCount;
         }
 
-        constexpr Self * getChild(uint8_t idx) const {
+        inline Self * getChild(uint8_t idx) const {
           return _children[idx];
         }
 
@@ -71,14 +72,23 @@ namespace data {
 
       private:
 
-        Self * _parent;
-        Self * _children[CHILD_COUNT];
+        Node * _parent;
+        Node * _children[CHILD_COUNT];
         size_t _childCount;
     };
 
     public:
-      T & get(const str_view & key) const {
-        return getNode()->data;
+      inline T & get(const str_view & key, const T & def = T()) {
+        using std::exception;
+        
+        T * value;
+
+        try {
+          value = getNode()->data;
+        } catch (const exception & e) {
+          return def;
+        }
+        return *value;
       }
 
       Self & set(const str_view & key, const T & value) {
@@ -89,7 +99,7 @@ namespace data {
         Node * node = root;
         for (const auto & c : key) {
           if (!node->getChild(c))
-            node->addChild(c)
+            node->addChild(c);
           node = node->getChild(c);
         }
         if (node->data)
@@ -99,7 +109,7 @@ namespace data {
       }
 
       Self & unset(const str_view & key) {
-        node = getNode(key);
+        auto node = getNode(key);
         node->data.reset();
         auto it = key.rbegin();
         do {
@@ -118,7 +128,7 @@ namespace data {
       }
 
     private:
-      T & getNode(const str_view & key) const {
+      Node & getNode(const str_view & key) const {
         using std::invalid_argument;
         
         if (!root)
@@ -126,7 +136,7 @@ namespace data {
         const Node * node = root;
         for (const auto & c : key) {
           if (!node->getChild(c))
-            throw invalid_argument("KeyNotFound")
+            throw invalid_argument("KeyNotFound");
           node = node->getChild(c);
         }
         if (!node->data)
